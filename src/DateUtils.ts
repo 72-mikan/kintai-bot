@@ -75,3 +75,18 @@ function normalizeDateStr(dateStr: string): string {
   const date = parseDate(dateStr);
   return formatDate(date);
 }
+
+// スプレッドシートのセル値（Dateオブジェクトに自動変換されている場合がある）を "YYYY/MM/DD" 文字列に変換
+function cellValueToDateStr(value: unknown): string {
+  if (isDateValue(value)) return formatDate(value);
+  return String(value);
+}
+
+// vm等の別レルムをまたいでも判定できるよう instanceof ではなくダックタイピングで判定する
+function isDateValue(value: unknown): value is Date {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as { getFullYear?: unknown }).getFullYear === 'function'
+  );
+}

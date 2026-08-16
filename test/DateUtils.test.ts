@@ -11,6 +11,7 @@ const {
   calculateWorkingTime,
   isWeekend,
   normalizeDateStr,
+  cellValueToDateStr,
 } = loadGasFile('DateUtils.ts');
 
 describe('getDayName', () => {
@@ -87,5 +88,14 @@ describe('isWeekend', () => {
 describe('normalizeDateStr', () => {
   it('ハイフン区切りをスラッシュ区切りに正規化する', () => {
     expect(normalizeDateStr('2026-8-6')).toBe('2026/08/06');
+  });
+});
+
+describe('cellValueToDateStr', () => {
+  it('Dateオブジェクトを "YYYY/MM/DD" 文字列に変換する', () => {
+    expect(cellValueToDateStr(new Date(2026, 7, 3))).toBe('2026/08/03');
+  });
+  it('文字列はそのまま文字列化して返す', () => {
+    expect(cellValueToDateStr('2026/08/03')).toBe('2026/08/03');
   });
 });
