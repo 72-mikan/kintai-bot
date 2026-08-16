@@ -12,6 +12,8 @@ const {
   isWeekend,
   normalizeDateStr,
   cellValueToDateStr,
+  cellValueToTimeStr,
+  cellValueToWorkingTimeStr,
 } = loadGasFile('DateUtils.ts');
 
 describe('getDayName', () => {
@@ -97,5 +99,32 @@ describe('cellValueToDateStr', () => {
   });
   it('文字列はそのまま文字列化して返す', () => {
     expect(cellValueToDateStr('2026/08/03')).toBe('2026/08/03');
+  });
+});
+
+describe('cellValueToTimeStr', () => {
+  it('Dateオブジェクトを "HH:MM" 文字列に変換する', () => {
+    expect(cellValueToTimeStr(new Date(1899, 11, 30, 9, 0))).toBe('09:00');
+  });
+  it('分が1桁でも0埋めする', () => {
+    expect(cellValueToTimeStr(new Date(1899, 11, 30, 8, 5))).toBe('08:05');
+  });
+  it('文字列はそのまま文字列化して返す', () => {
+    expect(cellValueToTimeStr('9:00')).toBe('9:00');
+  });
+  it('空文字はそのまま返す', () => {
+    expect(cellValueToTimeStr('')).toBe('');
+  });
+});
+
+describe('cellValueToWorkingTimeStr', () => {
+  it('Dateオブジェクトを "H:MM"（時をゼロ埋めしない）文字列に変換する', () => {
+    expect(cellValueToWorkingTimeStr(new Date(1899, 11, 30, 8, 0))).toBe('8:00');
+  });
+  it('2桁の時もそのまま返す', () => {
+    expect(cellValueToWorkingTimeStr(new Date(1899, 11, 30, 12, 30))).toBe('12:30');
+  });
+  it('文字列はそのまま文字列化して返す', () => {
+    expect(cellValueToWorkingTimeStr('8:00')).toBe('8:00');
   });
 });

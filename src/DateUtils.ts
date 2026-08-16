@@ -90,3 +90,24 @@ function isDateValue(value: unknown): value is Date {
     typeof (value as { getFullYear?: unknown }).getFullYear === 'function'
   );
 }
+
+// スプレッドシートの時刻セル値（Dateオブジェクトに自動変換されている場合がある）を "HH:MM" 文字列に変換
+function cellValueToTimeStr(value: unknown): string {
+  return formatCellTime(value, true);
+}
+
+// 実働時間セル値（Dateオブジェクトに自動変換されている場合がある）を、
+// minutesToTime と同じ "H:MM"（時をゼロ埋めしない）表記に変換
+function cellValueToWorkingTimeStr(value: unknown): string {
+  return formatCellTime(value, false);
+}
+
+function formatCellTime(value: unknown, padHour: boolean): string {
+  if (isDateValue(value)) {
+    const rawH = String(value.getHours());
+    const h = padHour ? rawH.padStart(2, '0') : rawH;
+    const m = String(value.getMinutes()).padStart(2, '0');
+    return `${h}:${m}`;
+  }
+  return String(value);
+}

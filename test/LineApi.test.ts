@@ -21,7 +21,7 @@ describe('formatAttendanceReport', () => {
         dayOfWeek: '月',
         startTime: '09:00',
         endTime: '18:00',
-        workContent: '',
+        workContent: '調査',
         breakTime: '01:00',
         workingTime: '8:00',
       },
@@ -39,9 +39,45 @@ describe('formatAttendanceReport', () => {
     const report = formatAttendanceReport(2026, 8, records);
 
     expect(report).toContain('【2026年8月 勤怠表】');
-    expect(report).toContain(' 3日(月) 09:00〜18:00 実8:00');
+    expect(report).toContain(' 3日(月) 09:00〜18:00 休01:00 実8:00 調査');
     expect(report).toContain(' 4日(火) ─');
     expect(report).toContain('勤務日数: 1日');
     expect(report).toContain('総稼働時間: 8:00');
+  });
+
+  it('作業内容に含まれる改行をスペースに置き換えて1行に収める', () => {
+    const records = [
+      {
+        date: '2026/08/03',
+        dayOfWeek: '月',
+        startTime: '09:00',
+        endTime: '18:00',
+        workContent: '設計\n打ち合わせ',
+        breakTime: '01:00',
+        workingTime: '8:00',
+      },
+    ];
+
+    const report = formatAttendanceReport(2026, 8, records);
+
+    expect(report).toContain(' 3日(月) 09:00〜18:00 休01:00 実8:00 設計 打ち合わせ\n');
+  });
+
+  it('休憩時間が空文字の場合は "休" ラベルが浮かず "─" を表示する', () => {
+    const records = [
+      {
+        date: '2026/08/03',
+        dayOfWeek: '月',
+        startTime: '09:00',
+        endTime: '18:00',
+        workContent: '',
+        breakTime: '',
+        workingTime: '9:00',
+      },
+    ];
+
+    const report = formatAttendanceReport(2026, 8, records);
+
+    expect(report).toContain(' 3日(月) 09:00〜18:00 休─ 実9:00');
   });
 });

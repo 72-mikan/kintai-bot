@@ -68,7 +68,9 @@ function formatAttendanceReport(year: number, month: number, records: Attendance
     if (!r.startTime) {
       report += `${dayStr} ─\n`;
     } else {
-      report += `${dayStr} ${r.startTime}〜${r.endTime} 実${r.workingTime}\n`;
+      let line = `${dayStr} ${r.startTime}〜${r.endTime} 休${r.breakTime || '─'} 実${r.workingTime}`;
+      if (r.workContent) line += ` ${r.workContent.replace(/\r?\n/g, ' ')}`;
+      report += line + '\n';
       totalMinutes += timeToMinutes(r.workingTime);
       workDays++;
     }
