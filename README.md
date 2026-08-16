@@ -20,7 +20,7 @@ LINEのリッチメニューから、以下の4つのLIFF画面を呼び出し�
 
 ## デモ
 
-[勤怠管理bot - デモ動画.zip](https://github.com/user-attachments/files/31114444/bot.-.zip)
+https://github.com/user-attachments/assets/33b5f81e-968c-4f2d-849e-9a4230cc9510
 
 ## 技術スタック
 
