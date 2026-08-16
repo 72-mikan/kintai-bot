@@ -1,0 +1,16 @@
+{
+  "name": "line-kintai",
+  "version": "1.0.0",
+  "description": "LINE勤怠管理アプリ (GAS + TypeScript)",
+  "scripts": {
+    "push": "clasp push",
+    "pull": "clasp pull",
+    "deploy": "clasp deploy",
+    "open": "clasp open"
+  },
+  "devDependencies": {
+    "@google/clasp": "^2.4.2",
+    "@types/google-apps-script": "^1.0.83",
+    "typescript": "^5.3.3"
+  }
+}

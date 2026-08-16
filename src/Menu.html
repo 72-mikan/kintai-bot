@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>勤怠管理</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; }
+    .header { background: #06C755; color: white; padding: 20px 16px; text-align: center; font-size: 20px; font-weight: bold; }
+    .container { max-width: 480px; margin: 0 auto; padding: 16px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+    .menu-btn {
+      background: white; border: none; border-radius: 12px;
+      padding: 24px 12px; text-align: center; text-decoration: none; color: #333;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .menu-btn:active { transform: scale(0.97); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .menu-btn .icon { font-size: 32px; }
+    .menu-btn .label { font-size: 14px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="header">勤怠管理</div>
+  <div class="container">
+    <div class="grid">
+      <a class="menu-btn" href="?page=settings">
+        <span class="icon">⚙️</span>
+        <span class="label">基本設定</span>
+      </a>
+      <a class="menu-btn" href="?page=input">
+        <span class="icon">✏️</span>
+        <span class="label">勤怠入力</span>
+      </a>
+      <a class="menu-btn" href="?page=input">
+        <span class="icon">🔧</span>
+        <span class="label">勤怠修正</span>
+      </a>
+      <a class="menu-btn" href="?page=output">
+        <span class="icon">📊</span>
+        <span class="label">勤怠表の出力</span>
+      </a>
+    </div>
+  </div>
+</body>
+</html>
