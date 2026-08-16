@@ -6,11 +6,14 @@
     "push": "clasp push",
     "pull": "clasp pull",
     "deploy": "clasp deploy",
-    "open": "clasp open"
+    "open": "clasp open",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@google/clasp": "^2.4.2",
     "@types/google-apps-script": "^1.0.83",
-    "typescript": "^5.3.3"
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.6.0"
   }
 }
