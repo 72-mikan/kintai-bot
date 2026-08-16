@@ -60,6 +60,9 @@ function initializeMonthSheet(
   headerRange.setFontColor('#FFFFFF');
 
   const days = getDaysInMonth(year, month);
+  // A列（日付）は文字列 "YYYY/MM/DD" として保持したいため、
+  // スプレッドシート側の自動日付変換を防ぐ書式に固定する
+  sheet.getRange(2, 1, days, 1).setNumberFormat('@');
   const rows: string[][] = [];
   for (let d = 1; d <= days; d++) {
     const date = new Date(year, month - 1, d);
@@ -88,7 +91,7 @@ function findDateRow(
 ): number {
   const data = sheet.getDataRange().getValues();
   for (let i = 1; i < data.length; i++) {
-    if (String(data[i][0]) === dateStr) return i + 1;
+    if (cellValueToDateStr(data[i][0]) === dateStr) return i + 1;
   }
   return -1;
 }
@@ -111,7 +114,7 @@ function getAttendance(dateStr: string): AttendanceRecord | null {
   if (!vals[2]) return null; // 開始時間なし = 未登録
 
   return {
-    date:        String(vals[0]),
+    date:        cellValueToDateStr(vals[0]),
     dayOfWeek:   String(vals[1]),
     startTime:   String(vals[2]),
     endTime:     String(vals[3]),
@@ -154,7 +157,7 @@ function getMonthlyAttendance(year: number, month: number): AttendanceRecord[] {
   for (let i = 1; i < data.length; i++) {
     const r = data[i];
     records.push({
-      date:        String(r[0]),
+      date:        cellValueToDateStr(r[0]),
       dayOfWeek:   String(r[1]),
       startTime:   String(r[2]),
       endTime:     String(r[3]),
