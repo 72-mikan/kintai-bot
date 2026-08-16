@@ -60,9 +60,10 @@ function initializeMonthSheet(
   headerRange.setFontColor('#FFFFFF');
 
   const days = getDaysInMonth(year, month);
-  // A列（日付）は文字列 "YYYY/MM/DD" として保持したいため、
-  // スプレッドシート側の自動日付変換を防ぐ書式に固定する
+  // A列（日付）・C〜G列（開始時間・終了時間・作業内容・休憩時間・実働時間）は
+  // 文字列として保持したいため、スプレッドシート側の自動日付・時刻変換を防ぐ書式に固定する
   sheet.getRange(2, 1, days, 1).setNumberFormat('@');
+  sheet.getRange(2, 3, days, 5).setNumberFormat('@');
   const rows: string[][] = [];
   for (let d = 1; d <= days; d++) {
     const date = new Date(year, month - 1, d);
@@ -116,11 +117,11 @@ function getAttendance(dateStr: string): AttendanceRecord | null {
   return {
     date:        cellValueToDateStr(vals[0]),
     dayOfWeek:   String(vals[1]),
-    startTime:   String(vals[2]),
-    endTime:     String(vals[3]),
+    startTime:   cellValueToTimeStr(vals[2]),
+    endTime:     cellValueToTimeStr(vals[3]),
     workContent: String(vals[4]),
-    breakTime:   String(vals[5]),
-    workingTime: String(vals[6]),
+    breakTime:   cellValueToTimeStr(vals[5]),
+    workingTime: cellValueToWorkingTimeStr(vals[6]),
   };
 }
 
@@ -159,11 +160,11 @@ function getMonthlyAttendance(year: number, month: number): AttendanceRecord[] {
     records.push({
       date:        cellValueToDateStr(r[0]),
       dayOfWeek:   String(r[1]),
-      startTime:   String(r[2]),
-      endTime:     String(r[3]),
+      startTime:   cellValueToTimeStr(r[2]),
+      endTime:     cellValueToTimeStr(r[3]),
       workContent: String(r[4]),
-      breakTime:   String(r[5]),
-      workingTime: String(r[6]),
+      breakTime:   cellValueToTimeStr(r[5]),
+      workingTime: cellValueToWorkingTimeStr(r[6]),
     });
   }
   return records;
