@@ -6,16 +6,16 @@ function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.Tex
     return handleApiRequest(e);
   }
 
+  // LINEの署名検証はLambda（プロキシ）側で実施済みの前提。
+  // ここではLambda経由のリクエストであることを共有シークレットで確認する（issue #6）
+  const proxyToken = e.parameter['proxyToken'] || '';
+  const expectedToken = PropertiesService.getScriptProperties().getProperty('PROXY_SHARED_SECRET') || '';
+  if (!expectedToken || !timingSafeEqual(proxyToken, expectedToken)) {
+    return ContentService.createTextOutput('Unauthorized');
+  }
+
   try {
     const body = e.postData.contents;
-    const signature = e.parameter['x-line-signature'] ||
-      (e.postData as unknown as { headers: Record<string, string> })?.headers?.['x-line-signature'] || '';
-
-    // 署名検証（セキュリティ）
-    if (signature && !verifySignature(body, signature)) {
-      return ContentService.createTextOutput('Unauthorized');
-    }
-
     const json = JSON.parse(body);
     for (const event of json.events) {
       try {
@@ -28,6 +28,15 @@ function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.Tex
     console.error('doPost エラー:', err);
   }
   return ContentService.createTextOutput('OK');
+}
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
 }
 
 // LIFF ページ (fetch) から呼び出し可能な関数のみを許可リストで公開
