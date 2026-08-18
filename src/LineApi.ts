@@ -81,16 +81,6 @@ function formatAttendanceReport(year: number, month: number, records: Attendance
   return report;
 }
 
-// ---- LINE Webhook 署名検証 ----
-
-function verifySignature(rawBody: string, signature: string): boolean {
-  const secret = PropertiesService.getScriptProperties().getProperty('LINE_CHANNEL_SECRET') || '';
-  if (!secret) return false;
-  const hmac = Utilities.computeHmacSha256Signature(rawBody, secret);
-  const expected = Utilities.base64Encode(hmac);
-  return expected === signature;
-}
-
 // ---- リッチメニュー設定 ----
 
 function setupRichMenu(): void {
