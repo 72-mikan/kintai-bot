@@ -28,7 +28,14 @@ https://github.com/user-attachments/assets/33b5f81e-968c-4f2d-849e-9a4230cc9510
 - LIFF（LINE Front-end Framework）によるフォームUI（バニラJS + HTML）
 - データストア: Googleスプレッドシート（月次シート＋基本設定シート）
 - LINE Messaging API（Webhook / Push message）
+- AWS Lambda（Function URL）：LINE Webhookの署名検証プロキシ
 - テスト: [Vitest](https://vitest.dev/)（GAS組み込みAPIに依存しない純粋ロジックのみ対象）
+
+## アーキテクチャ
+
+![アーキテクチャ図](./image/architecture.drawio.png)
+
+GASの `doPost` はHTTPヘッダーを直接取得できず、LINEが送ってくる署名（`X-Line-Signature`）を検証できないという制約があります。そのため、LINEからのWebhookはまずAWS Lambdaが受け取って署名検証を行い、検証済みのリクエストのみを共有シークレット付きでGASへ転送する構成にしています（詳細: [issue #6](https://github.com/72-mikan/kintai-bot/issues/6)）。
 
 ## ディレクトリ構成
 
