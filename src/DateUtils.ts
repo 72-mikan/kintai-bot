@@ -91,23 +91,39 @@ function isDateValue(value: unknown): value is Date {
   );
 }
 
-// スプレッドシートの時刻セル値（Dateオブジェクトに自動変換されている場合がある）を "HH:MM" 文字列に変換
-function cellValueToTimeStr(value: unknown): string {
-  return formatCellTime(value, true);
-}
-
 // 実働時間セル値（Dateオブジェクトに自動変換されている場合がある）を、
 // minutesToTime と同じ "H:MM"（時をゼロ埋めしない）表記に変換
 function cellValueToWorkingTimeStr(value: unknown): string {
-  return formatCellTime(value, false);
+  if (isDateValue(value)) return formatCellTime(value);
+  return String(value);
 }
 
-function formatCellTime(value: unknown, padHour: boolean): string {
-  if (isDateValue(value)) {
-    const rawH = String(value.getHours());
-    const h = padHour ? rawH.padStart(2, '0') : rawH;
-    const m = String(value.getMinutes()).padStart(2, '0');
-    return `${h}:${m}`;
-  }
-  return String(value);
+function formatCellTime(value: Date): string {
+  const h = String(value.getHours());
+  const m = String(value.getMinutes()).padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+// "H:MM"/"HH:MM" 形式の時刻文字列を、スプレッドシート保存用のコロン無し数値文字列に変換する
+// 例: "9:00" → "900", "18:00" → "1800", "1:00" → "100"
+// (issue #10: スプレッドシート側の自動時刻変換を避けるため、開始/終了/休憩時間はこの形式で保存する)
+function timeToStorageStr(time: string): string {
+  if (!time) return '';
+  const [h, m] = time.split(':');
+  const hh = Number(h) || 0;
+  const mm = String(Number(m) || 0).padStart(2, '0');
+  return `${hh}${mm}`;
+}
+
+// スプレッドシートの時刻セル値を "H:MM" 形式に変換する
+// - Dateオブジェクトに自動変換されている場合はそこから抽出
+// - "900" のような保存用の数値文字列はコロン区切りに変換
+// - 旧形式でコロンを含む文字列のまま保存されている場合はそのまま返す（後方互換）
+function storageStrToTime(value: unknown): string {
+  if (isDateValue(value)) return formatCellTime(value);
+  const str = String(value ?? '').trim();
+  if (!str || str.includes(':')) return str;
+  const mm = str.slice(-2).padStart(2, '0');
+  const hh = str.length > 2 ? Number(str.slice(0, -2)) : 0;
+  return `${hh}:${mm}`;
 }

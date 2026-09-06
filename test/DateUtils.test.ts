@@ -12,7 +12,8 @@ const {
   isWeekend,
   normalizeDateStr,
   cellValueToDateStr,
-  cellValueToTimeStr,
+  timeToStorageStr,
+  storageStrToTime,
   cellValueToWorkingTimeStr,
 } = loadGasFile('DateUtils.ts');
 
@@ -102,18 +103,37 @@ describe('cellValueToDateStr', () => {
   });
 });
 
-describe('cellValueToTimeStr', () => {
-  it('Dateオブジェクトを "HH:MM" 文字列に変換する', () => {
-    expect(cellValueToTimeStr(new Date(1899, 11, 30, 9, 0))).toBe('09:00');
+describe('timeToStorageStr', () => {
+  it('コロン区切りの時刻を保存用の数値文字列に変換する', () => {
+    expect(timeToStorageStr('9:00')).toBe('900');
+    expect(timeToStorageStr('18:00')).toBe('1800');
+    expect(timeToStorageStr('1:00')).toBe('100');
   });
-  it('分が1桁でも0埋めする', () => {
-    expect(cellValueToTimeStr(new Date(1899, 11, 30, 8, 5))).toBe('08:05');
+  it('0埋めされた時刻文字列にも対応する', () => {
+    expect(timeToStorageStr('09:05')).toBe('905');
   });
-  it('文字列はそのまま文字列化して返す', () => {
-    expect(cellValueToTimeStr('9:00')).toBe('9:00');
+  it('空文字は空文字を返す', () => {
+    expect(timeToStorageStr('')).toBe('');
+  });
+});
+
+describe('storageStrToTime', () => {
+  it('保存用の数値文字列をコロン区切りの時刻に変換する', () => {
+    expect(storageStrToTime('900')).toBe('9:00');
+    expect(storageStrToTime('1800')).toBe('18:00');
+    expect(storageStrToTime('100')).toBe('1:00');
+  });
+  it('分のみの値も0埋めして変換する', () => {
+    expect(storageStrToTime('30')).toBe('0:30');
+  });
+  it('Dateオブジェクトを "H:MM" 文字列に変換する', () => {
+    expect(storageStrToTime(new Date(1899, 11, 30, 9, 0))).toBe('9:00');
+  });
+  it('旧形式のコロン付き文字列はそのまま返す（後方互換）', () => {
+    expect(storageStrToTime('9:00')).toBe('9:00');
   });
   it('空文字はそのまま返す', () => {
-    expect(cellValueToTimeStr('')).toBe('');
+    expect(storageStrToTime('')).toBe('');
   });
 });
 

@@ -25,6 +25,11 @@ function getBasicSettings(): BasicSettings {
 function saveBasicSettings(settings: BasicSettings): void {
   const sheet = getSpreadsheet().getSheetByName(SETTINGS_SHEET_NAME);
   if (!sheet) throw new Error('基本設定シートが見つかりません');
+  // B1:B3 が過去に時刻として自動変換され「時刻」書式のまま残っていると、
+  // 文字列を書き込んでも書式側で再解釈され壊れるため、書き込み前にテキスト書式へ固定する。
+  // このシートの値は自動登録・プリフィルの初期値としてのみ使われるため、
+  // 月別シートと異なり保存用の数値文字列 ("900") への変換は行わない（PR #12 レビュー対応）
+  sheet.getRange('B1:B3').setNumberFormat('@');
   sheet.getRange('B1').setValue(settings.startTime);
   sheet.getRange('B2').setValue(settings.endTime);
   sheet.getRange('B3').setValue(settings.breakTime);
@@ -117,10 +122,10 @@ function getAttendance(dateStr: string): AttendanceRecord | null {
   return {
     date:        cellValueToDateStr(vals[0]),
     dayOfWeek:   String(vals[1]),
-    startTime:   cellValueToTimeStr(vals[2]),
-    endTime:     cellValueToTimeStr(vals[3]),
+    startTime:   storageStrToTime(vals[2]),
+    endTime:     storageStrToTime(vals[3]),
     workContent: String(vals[4]),
-    breakTime:   cellValueToTimeStr(vals[5]),
+    breakTime:   storageStrToTime(vals[5]),
     workingTime: cellValueToWorkingTimeStr(vals[6]),
   };
 }
@@ -134,10 +139,10 @@ function saveAttendance(record: AttendanceRecord): void {
   const row = [
     normalized,
     record.dayOfWeek || getDayName(date),
-    record.startTime,
-    record.endTime,
+    timeToStorageStr(record.startTime),
+    timeToStorageStr(record.endTime),
     record.workContent,
-    record.breakTime,
+    timeToStorageStr(record.breakTime),
     working,
   ];
 
@@ -160,10 +165,10 @@ function getMonthlyAttendance(year: number, month: number): AttendanceRecord[] {
     records.push({
       date:        cellValueToDateStr(r[0]),
       dayOfWeek:   String(r[1]),
-      startTime:   cellValueToTimeStr(r[2]),
-      endTime:     cellValueToTimeStr(r[3]),
+      startTime:   storageStrToTime(r[2]),
+      endTime:     storageStrToTime(r[3]),
       workContent: String(r[4]),
-      breakTime:   cellValueToTimeStr(r[5]),
+      breakTime:   storageStrToTime(r[5]),
       workingTime: cellValueToWorkingTimeStr(r[6]),
     });
   }
@@ -186,6 +191,7 @@ function setupSpreadsheet(): void {
   if (!settingsSheet) {
     settingsSheet = ss.insertSheet(SETTINGS_SHEET_NAME);
   }
+  settingsSheet.getRange('B1:B3').setNumberFormat('@');
   const headerRange = settingsSheet.getRange('A1:B3');
   headerRange.setValues([
     ['開始時間', '09:00'],
