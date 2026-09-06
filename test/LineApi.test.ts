@@ -80,4 +80,35 @@ describe('formatAttendanceReport', () => {
 
     expect(report).toContain(' 3日(月) 09:00〜18:00 休─ 実9:00');
   });
+
+  it('isDayOff が true の日は「休み」と表示し、勤務日数・総稼働時間に含めない', () => {
+    const records = [
+      {
+        date: '2026/08/03',
+        dayOfWeek: '月',
+        startTime: '09:00',
+        endTime: '18:00',
+        workContent: '調査',
+        breakTime: '01:00',
+        workingTime: '8:00',
+        isDayOff: false,
+      },
+      {
+        date: '2026/08/04',
+        dayOfWeek: '火',
+        startTime: '',
+        endTime: '',
+        workContent: '有給休暇',
+        breakTime: '',
+        workingTime: '',
+        isDayOff: true,
+      },
+    ];
+
+    const report = formatAttendanceReport(2026, 8, records);
+
+    expect(report).toContain(' 4日(火) 休み　有給休暇');
+    expect(report).toContain('勤務日数: 1日');
+    expect(report).toContain('総稼働時間: 8:00');
+  });
 });

@@ -34,6 +34,10 @@
     textarea { resize: vertical; min-height: 72px; }
     .working-time-display { font-size: 22px; font-weight: bold; color: #06C755; text-align: center; padding: 12px; }
     .working-label { font-size: 13px; color: #888; text-align: center; }
+    .day-off-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .day-off-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: #06C755; }
+    .day-off-row label { margin-bottom: 0; }
+    input[type="time"]:disabled { background: #f5f5f5; color: #bbb; }
     .btn-primary {
       position: fixed; bottom: 0; left: 0; right: 0;
       padding: 16px; background: #06C755; color: white;
@@ -69,6 +73,10 @@
       <!-- 勤務時間 -->
       <div class="card">
         <div class="card-title">勤務時間</div>
+        <div class="day-off-row">
+          <input type="checkbox" id="isDayOff" onchange="onDayOffChange()">
+          <label for="isDayOff">この日は休み（有給など）</label>
+        </div>
         <div class="form-group">
           <label for="startTime">開始時間</label>
           <input type="time" id="startTime" oninput="updateWorkingTime()">
@@ -146,6 +154,10 @@
     }
 
     function updateWorkingTime() {
+      if (document.getElementById('isDayOff').checked) {
+        document.getElementById('workingTimeDisplay').textContent = '休み';
+        return;
+      }
       const start = timeToMin(document.getElementById('startTime').value);
       const end   = timeToMin(document.getElementById('endTime').value);
       const brk   = timeToMin(document.getElementById('breakTime').value);
@@ -154,17 +166,26 @@
         (start && end) ? minToTime(work) + 'h' : '─';
     }
 
+    function onDayOffChange() {
+      const isDayOff = document.getElementById('isDayOff').checked;
+      document.getElementById('startTime').disabled = isDayOff;
+      document.getElementById('endTime').disabled   = isDayOff;
+      document.getElementById('breakTime').disabled = isDayOff;
+      updateWorkingTime();
+    }
+
     async function loadAttendance(dateStr) {
       // dateStr は "YYYY-MM-DD"
       const slashed = dateStr.replace(/-/g, '/');
       const result = await runScript('getAttendanceForClient', slashed);
       if (result.success && result.data) {
         const d = result.data;
+        document.getElementById('isDayOff').checked  = !!d.isDayOff;
         document.getElementById('startTime').value   = toTimeInput(d.startTime);
         document.getElementById('endTime').value     = toTimeInput(d.endTime);
         document.getElementById('breakTime').value   = toTimeInput(d.breakTime);
         document.getElementById('workContent').value = d.workContent || '';
-        updateWorkingTime();
+        onDayOffChange();
       }
     }
 
@@ -179,12 +200,13 @@
       btn.disabled = true;
       btn.textContent = '保存中...';
 
-      const dateStr = document.getElementById('dateInput').value;
-      const startTime = document.getElementById('startTime').value;
-      const endTime   = document.getElementById('endTime').value;
-      const breakTime = document.getElementById('breakTime').value;
+      const dateStr   = document.getElementById('dateInput').value;
+      const isDayOff  = document.getElementById('isDayOff').checked;
+      const startTime = isDayOff ? '' : document.getElementById('startTime').value;
+      const endTime   = isDayOff ? '' : document.getElementById('endTime').value;
+      const breakTime = isDayOff ? '' : document.getElementById('breakTime').value;
 
-      if (!dateStr || !startTime || !endTime) {
+      if (!dateStr || (!isDayOff && (!startTime || !endTime))) {
         showToast('日付・開始時間・終了時間は必須です', 'error');
         btn.disabled = false;
         btn.textContent = '登録';
@@ -201,8 +223,9 @@
           startTime,
           endTime,
           workContent: document.getElementById('workContent').value,
-          breakTime:   breakTime || '0:00',
+          breakTime:   isDayOff ? '' : (breakTime || '0:00'),
           workingTime: '',
+          isDayOff,
         };
         const result = await runScript('saveAttendanceFromClient', record);
         if (result.success) {

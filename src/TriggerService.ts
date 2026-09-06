@@ -59,7 +59,7 @@ function autoAttendance(): void {
 
   const dateStr = formatDate(yesterday);
   const existing = getAttendance(dateStr);
-  if (existing && existing.startTime) return; // 登録済み
+  if (existing && (existing.startTime || existing.isDayOff)) return; // 登録済み（「休み」登録済みも含む）
 
   const settings = getBasicSettings();
   const record: AttendanceRecord = {
@@ -70,6 +70,7 @@ function autoAttendance(): void {
     workContent: '自動登録',
     breakTime:   settings.breakTime,
     workingTime: calculateWorkingTime(settings.startTime, settings.endTime, settings.breakTime),
+    isDayOff:    false,
   };
 
   saveAttendance(record);

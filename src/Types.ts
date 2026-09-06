@@ -14,6 +14,7 @@ type AttendanceRecord = {
   workContent: string;
   breakTime: string;   // "H:MM"（スプレッドシートには "100" 形式で保存される）
   workingTime: string; // "H:MM"
+  isDayOff: boolean;   // 有給等による休み。スプレッドシートのH列に "休み" として保存される
 };
 
 type ScriptResult = {

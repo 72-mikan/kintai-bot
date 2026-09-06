@@ -48,8 +48,26 @@ function getOrCreateMonthSheet(year: number, month: number): GoogleAppsScript.Sp
   if (!sheet) {
     sheet = ss.insertSheet(name);
     initializeMonthSheet(sheet, year, month);
+  } else {
+    ensureDayOffColumn(sheet);
   }
   return sheet;
+}
+
+// H列（休み）追加前に作成された月別シートに、ヘッダーと書式を後付けする（issue #11）
+function ensureDayOffColumn(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
+  const headerCell = sheet.getRange(1, 8);
+  if (headerCell.getValue()) return; // 既にヘッダーがあれば何もしない
+
+  headerCell.setValue('休み');
+  headerCell.setFontWeight('bold');
+  headerCell.setBackground('#4CAF50');
+  headerCell.setFontColor('#FFFFFF');
+
+  const days = sheet.getLastRow() - 1;
+  if (days > 0) {
+    sheet.getRange(2, 8, days, 1).setNumberFormat('@');
+  }
 }
 
 function initializeMonthSheet(
@@ -57,35 +75,35 @@ function initializeMonthSheet(
   year: number,
   month: number
 ): void {
-  const headers = [['日付', '曜日', '開始時間', '終了時間', '作業内容', '休憩時間', '実働時間']];
-  const headerRange = sheet.getRange(1, 1, 1, 7);
+  const headers = [['日付', '曜日', '開始時間', '終了時間', '作業内容', '休憩時間', '実働時間', '休み']];
+  const headerRange = sheet.getRange(1, 1, 1, 8);
   headerRange.setValues(headers);
   headerRange.setFontWeight('bold');
   headerRange.setBackground('#4CAF50');
   headerRange.setFontColor('#FFFFFF');
 
   const days = getDaysInMonth(year, month);
-  // A列（日付）・C〜G列（開始時間・終了時間・作業内容・休憩時間・実働時間）は
+  // A列（日付）・C〜H列（開始時間・終了時間・作業内容・休憩時間・実働時間・休み）は
   // 文字列として保持したいため、スプレッドシート側の自動日付・時刻変換を防ぐ書式に固定する
   sheet.getRange(2, 1, days, 1).setNumberFormat('@');
-  sheet.getRange(2, 3, days, 5).setNumberFormat('@');
+  sheet.getRange(2, 3, days, 6).setNumberFormat('@');
   const rows: string[][] = [];
   for (let d = 1; d <= days; d++) {
     const date = new Date(year, month - 1, d);
     const dateStr = `${year}/${String(month).padStart(2, '0')}/${String(d).padStart(2, '0')}`;
-    rows.push([dateStr, getDayName(date), '', '', '', '', '']);
+    rows.push([dateStr, getDayName(date), '', '', '', '', '', '']);
   }
   if (rows.length > 0) {
-    sheet.getRange(2, 1, rows.length, 7).setValues(rows);
+    sheet.getRange(2, 1, rows.length, 8).setValues(rows);
   }
   // 土日の行に背景色
   for (let d = 1; d <= days; d++) {
     const date = new Date(year, month - 1, d);
     const row = d + 1;
     if (date.getDay() === 0) {
-      sheet.getRange(row, 1, 1, 7).setBackground('#FFEBEE');
+      sheet.getRange(row, 1, 1, 8).setBackground('#FFEBEE');
     } else if (date.getDay() === 6) {
-      sheet.getRange(row, 1, 1, 7).setBackground('#E3F2FD');
+      sheet.getRange(row, 1, 1, 8).setBackground('#E3F2FD');
     }
   }
 }
@@ -116,8 +134,9 @@ function getAttendance(dateStr: string): AttendanceRecord | null {
   const row = findDateRow(sheet, normalized);
   if (row === -1) return null;
 
-  const vals = sheet.getRange(row, 1, 1, 7).getValues()[0];
-  if (!vals[2]) return null; // 開始時間なし = 未登録
+  const vals = sheet.getRange(row, 1, 1, 8).getValues()[0];
+  const isDayOff = Boolean(vals[7]);
+  if (!vals[2] && !isDayOff) return null; // 開始時間・休み登録どちらもなし = 未登録
 
   return {
     date:        cellValueToDateStr(vals[0]),
@@ -127,6 +146,7 @@ function getAttendance(dateStr: string): AttendanceRecord | null {
     workContent: String(vals[4]),
     breakTime:   storageStrToTime(vals[5]),
     workingTime: cellValueToWorkingTimeStr(vals[6]),
+    isDayOff,
   };
 }
 
@@ -144,13 +164,14 @@ function saveAttendance(record: AttendanceRecord): void {
     record.workContent,
     timeToStorageStr(record.breakTime),
     working,
+    record.isDayOff ? '休み' : '',
   ];
 
   const rowNum = findDateRow(sheet, normalized);
   if (rowNum === -1) {
     sheet.appendRow(row);
   } else {
-    sheet.getRange(rowNum, 1, 1, 7).setValues([row]);
+    sheet.getRange(rowNum, 1, 1, 8).setValues([row]);
   }
 }
 
@@ -170,16 +191,17 @@ function getMonthlyAttendance(year: number, month: number): AttendanceRecord[] {
       workContent: String(r[4]),
       breakTime:   storageStrToTime(r[5]),
       workingTime: cellValueToWorkingTimeStr(r[6]),
+      isDayOff:    Boolean(r[7]),
     });
   }
   return records;
 }
 
-// 今日の勤怠が登録済みかどうか
+// 今日の勤怠が登録済みかどうか（「休み」登録済みも登録済み扱いとする）
 function hasAttendanceToday(): boolean {
   const today = new Date();
   const record = getAttendance(formatDate(today));
-  return record !== null && record.startTime !== '';
+  return record !== null && (record.startTime !== '' || record.isDayOff);
 }
 
 // スプレッドシート初期化（初回セットアップ時に実行）
