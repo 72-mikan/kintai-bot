@@ -19,8 +19,7 @@ LINEのリッチメニューから、以下の4つのLIFF画面を呼び出し�
 - 0:00台：前日分が未登録のまま日付が変わった場合、基本設定のデフォルト値で自動登録
 
 ## デモ
-
-https://github.com/user-attachments/assets/33b5f81e-968c-4f2d-849e-9a4230cc9510
+https://github.com/user-attachments/assets/c9c86e0b-4990-451a-adcd-42f27c687b15
 
 ## 技術スタック
 
