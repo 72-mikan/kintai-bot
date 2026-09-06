@@ -146,14 +146,12 @@ function saveAttendance(record: AttendanceRecord): void {
     working,
   ];
 
-  let rowNum = findDateRow(sheet, normalized);
+  const rowNum = findDateRow(sheet, normalized);
   if (rowNum === -1) {
-    rowNum = sheet.getLastRow() + 1;
+    sheet.appendRow(row);
+  } else {
+    sheet.getRange(rowNum, 1, 1, 7).setValues([row]);
   }
-  // C〜G列が過去に時刻として自動変換され書式が残っている可能性があるため、
-  // 書き込み前にテキスト書式へ固定する（issue #10）
-  sheet.getRange(rowNum, 3, 1, 5).setNumberFormat('@');
-  sheet.getRange(rowNum, 1, 1, 7).setValues([row]);
 }
 
 function getMonthlyAttendance(year: number, month: number): AttendanceRecord[] {
