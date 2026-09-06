@@ -16,18 +16,22 @@ function getBasicSettings(): BasicSettings {
   const sheet = getSpreadsheet().getSheetByName(SETTINGS_SHEET_NAME);
   if (!sheet) throw new Error('基本設定シートが見つかりません');
   return {
-    startTime: String(sheet.getRange('B1').getValue()) || '09:00',
-    endTime:   String(sheet.getRange('B2').getValue()) || '18:00',
-    breakTime: String(sheet.getRange('B3').getValue()) || '1:00',
+    startTime: storageStrToTime(sheet.getRange('B1').getValue()) || '09:00',
+    endTime:   storageStrToTime(sheet.getRange('B2').getValue()) || '18:00',
+    breakTime: storageStrToTime(sheet.getRange('B3').getValue()) || '1:00',
   };
 }
 
 function saveBasicSettings(settings: BasicSettings): void {
   const sheet = getSpreadsheet().getSheetByName(SETTINGS_SHEET_NAME);
   if (!sheet) throw new Error('基本設定シートが見つかりません');
-  sheet.getRange('B1').setValue(settings.startTime);
-  sheet.getRange('B2').setValue(settings.endTime);
-  sheet.getRange('B3').setValue(settings.breakTime);
+  // B1:B3 が過去に時刻として自動変換され「時刻」書式のまま残っていると、
+  // "900" のような数値文字列を書き込んでも書式側で再解釈され壊れるため、
+  // 書き込み前に必ずテキスト書式へ固定する
+  sheet.getRange('B1:B3').setNumberFormat('@');
+  sheet.getRange('B1').setValue(timeToStorageStr(settings.startTime));
+  sheet.getRange('B2').setValue(timeToStorageStr(settings.endTime));
+  sheet.getRange('B3').setValue(timeToStorageStr(settings.breakTime));
 }
 
 // ---- 月別シート管理 ----
@@ -117,10 +121,10 @@ function getAttendance(dateStr: string): AttendanceRecord | null {
   return {
     date:        cellValueToDateStr(vals[0]),
     dayOfWeek:   String(vals[1]),
-    startTime:   cellValueToTimeStr(vals[2]),
-    endTime:     cellValueToTimeStr(vals[3]),
+    startTime:   storageStrToTime(vals[2]),
+    endTime:     storageStrToTime(vals[3]),
     workContent: String(vals[4]),
-    breakTime:   cellValueToTimeStr(vals[5]),
+    breakTime:   storageStrToTime(vals[5]),
     workingTime: cellValueToWorkingTimeStr(vals[6]),
   };
 }
@@ -134,19 +138,21 @@ function saveAttendance(record: AttendanceRecord): void {
   const row = [
     normalized,
     record.dayOfWeek || getDayName(date),
-    record.startTime,
-    record.endTime,
+    timeToStorageStr(record.startTime),
+    timeToStorageStr(record.endTime),
     record.workContent,
-    record.breakTime,
+    timeToStorageStr(record.breakTime),
     working,
   ];
 
-  const rowNum = findDateRow(sheet, normalized);
+  let rowNum = findDateRow(sheet, normalized);
   if (rowNum === -1) {
-    sheet.appendRow(row);
-  } else {
-    sheet.getRange(rowNum, 1, 1, 7).setValues([row]);
+    rowNum = sheet.getLastRow() + 1;
   }
+  // C〜G列が過去に時刻として自動変換され書式が残っている可能性があるため、
+  // 書き込み前にテキスト書式へ固定する（issue #10）
+  sheet.getRange(rowNum, 3, 1, 5).setNumberFormat('@');
+  sheet.getRange(rowNum, 1, 1, 7).setValues([row]);
 }
 
 function getMonthlyAttendance(year: number, month: number): AttendanceRecord[] {
@@ -160,10 +166,10 @@ function getMonthlyAttendance(year: number, month: number): AttendanceRecord[] {
     records.push({
       date:        cellValueToDateStr(r[0]),
       dayOfWeek:   String(r[1]),
-      startTime:   cellValueToTimeStr(r[2]),
-      endTime:     cellValueToTimeStr(r[3]),
+      startTime:   storageStrToTime(r[2]),
+      endTime:     storageStrToTime(r[3]),
       workContent: String(r[4]),
-      breakTime:   cellValueToTimeStr(r[5]),
+      breakTime:   storageStrToTime(r[5]),
       workingTime: cellValueToWorkingTimeStr(r[6]),
     });
   }
@@ -186,11 +192,12 @@ function setupSpreadsheet(): void {
   if (!settingsSheet) {
     settingsSheet = ss.insertSheet(SETTINGS_SHEET_NAME);
   }
+  settingsSheet.getRange('B1:B3').setNumberFormat('@');
   const headerRange = settingsSheet.getRange('A1:B3');
   headerRange.setValues([
-    ['開始時間', '09:00'],
-    ['終了時間', '18:00'],
-    ['休憩時間', '1:00'],
+    ['開始時間', timeToStorageStr('09:00')],
+    ['終了時間', timeToStorageStr('18:00')],
+    ['休憩時間', timeToStorageStr('1:00')],
   ]);
   settingsSheet.getRange('A1:A3').setFontWeight('bold');
 
