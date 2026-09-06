@@ -16,9 +16,9 @@ function getBasicSettings(): BasicSettings {
   const sheet = getSpreadsheet().getSheetByName(SETTINGS_SHEET_NAME);
   if (!sheet) throw new Error('基本設定シートが見つかりません');
   return {
-    startTime: storageStrToTime(sheet.getRange('B1').getValue()) || '09:00',
-    endTime:   storageStrToTime(sheet.getRange('B2').getValue()) || '18:00',
-    breakTime: storageStrToTime(sheet.getRange('B3').getValue()) || '1:00',
+    startTime: String(sheet.getRange('B1').getValue()) || '09:00',
+    endTime:   String(sheet.getRange('B2').getValue()) || '18:00',
+    breakTime: String(sheet.getRange('B3').getValue()) || '1:00',
   };
 }
 
@@ -26,12 +26,13 @@ function saveBasicSettings(settings: BasicSettings): void {
   const sheet = getSpreadsheet().getSheetByName(SETTINGS_SHEET_NAME);
   if (!sheet) throw new Error('基本設定シートが見つかりません');
   // B1:B3 が過去に時刻として自動変換され「時刻」書式のまま残っていると、
-  // "900" のような数値文字列を書き込んでも書式側で再解釈され壊れるため、
-  // 書き込み前に必ずテキスト書式へ固定する
+  // 文字列を書き込んでも書式側で再解釈され壊れるため、書き込み前にテキスト書式へ固定する。
+  // このシートの値は自動登録・プリフィルの初期値としてのみ使われるため、
+  // 月別シートと異なり保存用の数値文字列 ("900") への変換は行わない（PR #12 レビュー対応）
   sheet.getRange('B1:B3').setNumberFormat('@');
-  sheet.getRange('B1').setValue(timeToStorageStr(settings.startTime));
-  sheet.getRange('B2').setValue(timeToStorageStr(settings.endTime));
-  sheet.getRange('B3').setValue(timeToStorageStr(settings.breakTime));
+  sheet.getRange('B1').setValue(settings.startTime);
+  sheet.getRange('B2').setValue(settings.endTime);
+  sheet.getRange('B3').setValue(settings.breakTime);
 }
 
 // ---- 月別シート管理 ----
@@ -195,9 +196,9 @@ function setupSpreadsheet(): void {
   settingsSheet.getRange('B1:B3').setNumberFormat('@');
   const headerRange = settingsSheet.getRange('A1:B3');
   headerRange.setValues([
-    ['開始時間', timeToStorageStr('09:00')],
-    ['終了時間', timeToStorageStr('18:00')],
-    ['休憩時間', timeToStorageStr('1:00')],
+    ['開始時間', '09:00'],
+    ['終了時間', '18:00'],
+    ['休憩時間', '1:00'],
   ]);
   settingsSheet.getRange('A1:A3').setFontWeight('bold');
 

@@ -1,9 +1,9 @@
 // GAS全体で共有される型定義（importなし・グローバルスコープ）
 
 type BasicSettings = {
-  startTime: string;  // "H:MM"（スプレッドシートには "900" 形式で保存される）
-  endTime: string;    // "H:MM"（スプレッドシートには "1800" 形式で保存される）
-  breakTime: string;  // "H:MM"（スプレッドシートには "100" 形式で保存される）
+  startTime: string;  // "H:MM"
+  endTime: string;    // "H:MM"
+  breakTime: string;  // "H:MM"
 };
 
 type AttendanceRecord = {
