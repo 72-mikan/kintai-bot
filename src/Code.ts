@@ -76,9 +76,9 @@ function handleApiRequest(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.C
 function doGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.HTML.HtmlOutput {
   const page = e.parameter['page'] || 'menu';
   const fileMap: Record<string, string> = {
-    settings: 'Settings',
-    input:    'Input',
-    output:   'Output',
+    settings: 'template/Settings',
+    input:    'template/Input',
+    output:   'template/Output',
   };
   const titleMap: Record<string, string> = {
     settings: '基本設定',
@@ -86,7 +86,7 @@ function doGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.HTML.HtmlOutp
     output:   '勤怠表の出力',
   };
 
-  const fileName = fileMap[page] || 'Input';
+  const fileName = fileMap[page] || 'template/Input';
   const title = titleMap[page] || '勤怠入力';
 
   // createTemplateFromFile でスクリプトレット（<?= ?>）を有効化
