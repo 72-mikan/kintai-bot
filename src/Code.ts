@@ -139,7 +139,7 @@ function saveBasicSettingsFromClient(settings: BasicSettings): ScriptResult {
 function getAttendanceForClient(dateStr: string): ScriptResult {
   try {
     const record = getAttendance(dateStr);
-    if (record && record.startTime) {
+    if (record && (record.startTime || record.isDayOff)) {
       return { success: true, data: record };
     }
     // 未登録 → 基本設定のデフォルト値
@@ -153,6 +153,7 @@ function getAttendanceForClient(dateStr: string): ScriptResult {
       workContent: '',
       breakTime:   settings.breakTime,
       workingTime: '',
+      isDayOff:    false,
     };
     return { success: true, data: defaultRecord };
   } catch (e) {

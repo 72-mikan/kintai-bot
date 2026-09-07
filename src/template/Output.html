@@ -121,7 +121,17 @@
         const dayClass = isWe ? 'weekend' : '';
         const dayLabel = `${String(d.getDate()).padStart(2,' ')}日(${days[dayIdx]})`;
 
-        if (!r.startTime) {
+        if (r.isDayOff) {
+          const detail = r.workContent ? escapeHtml(r.workContent) : '';
+          rows += `<div class="preview-entry">
+            <div class="preview-row ${dayClass}">
+              <span class="date-col">${dayLabel}</span>
+              <span class="time-col">休み</span>
+              <span class="work-col"></span>
+            </div>
+            ${detail ? `<div class="preview-detail">${detail}</div>` : ''}
+          </div>`;
+        } else if (!r.startTime) {
           rows += `<div class="preview-entry">
             <div class="preview-row ${dayClass} empty">
               <span class="date-col">${dayLabel}</span>

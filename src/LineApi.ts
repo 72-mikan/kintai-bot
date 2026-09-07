@@ -65,7 +65,9 @@ function formatAttendanceReport(year: number, month: number, records: Attendance
     const d = date.getDate();
     const dayStr = `${String(d).padStart(2, ' ')}日(${r.dayOfWeek})`;
 
-    if (!r.startTime) {
+    if (r.isDayOff) {
+      report += `${dayStr} 休み${r.workContent ? `　${r.workContent.replace(/\r?\n/g, ' ')}` : ''}\n`;
+    } else if (!r.startTime) {
       report += `${dayStr} ─\n`;
     } else {
       let line = `${dayStr} ${r.startTime}〜${r.endTime} 休${r.breakTime || '─'} 実${r.workingTime}`;
